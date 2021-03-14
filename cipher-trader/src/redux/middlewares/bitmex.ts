@@ -2,18 +2,17 @@
 import Exchange from './exchange';
 
 export class Bitmex extends Exchange {
-  private id = 'bitmex';
   private baseUrl = `${this.testnet ? 'testnet' : 'www'}.bitmex.com`;
 
   constructor(options = {}, private testnet = true) {
-    super(options);
+    super({id: 'bitmex'});
 
     this.endoints = {
       PRODUCTS: `https://${this.baseUrl}/api/v1/instrument/active`,
     };
 
     this.options = {
-      url: () => `wss://${this.baseUrl}/realtime?subscribe=trade:XBTUSD,instrument:XBTUSD`,
+      url: `wss://${this.baseUrl}/realtime?subscribe=trade:XBTUSD,instrument:XBTUSD`,
       ...this.options,
     };
   }
@@ -26,7 +25,7 @@ export class Bitmex extends Exchange {
     return new Promise((resolve, reject) => {
       this.api = new WebSocket(this.options.url);
 
-      this.quotedInUSD = /USD$/.test(this.pair) || /^XBT/.test(this.pair);
+      // this.quotedInUSD = /USD$/.test(this.pair) || /^XBT/.test(this.pair);
 
       this.api.onmessage = (event) => {
         const data = JSON.parse(event.data);
@@ -49,7 +48,7 @@ export class Bitmex extends Exchange {
       };
       this.api.onclose = this.emitClose.bind(this);
       this.api.onerror = (error) => {
-        console.log('WEBSCOKET ERRRO: ', errror);
+        console.log('WEBSCOKET ERRRO: ', error);
         this.emitError({message: `${this.id} disconnected`});
 
         reject();
@@ -66,9 +65,7 @@ export class Bitmex extends Exchange {
   }
 
   send = (payload) => {
-    console.log('SENDDDDDDD');
     if (this.api) {
-      console.log('SEND', payload);
       this.api.send(JSON.stringify(payload));
     } else {
       throw new Error('Socket connection not initialized. Dispatch WEBSOCKET_CONNECT first');

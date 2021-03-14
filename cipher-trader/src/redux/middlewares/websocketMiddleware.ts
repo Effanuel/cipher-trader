@@ -39,7 +39,6 @@ class Socket {
 
   connect = (store: MiddlewareAPI, payload: any) => {
     console.log('CONNECTING');
-    this.bitmex.validatePair('XBTUSD');
     this.bitmex.connect();
 
     this.listenTrades(store);
