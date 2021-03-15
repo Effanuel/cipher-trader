@@ -10,9 +10,9 @@
   "main": "public/electron.js",
   "homepage": "./",
   "scripts": {
-    "react-start": "react-scripts start",
-    "react-build": "react-scripts build",
-    "react-test": "react-scripts test --env=jsdom",
+    "react-start": "craco start",
+    "react-build": "craco build",
+    "react-test": "craco test --env=jsdom",
     "react-eject": "react-scripts eject",
     "electron-build": "electron-builder",
     "release": "npm run react-build && electron-builder --publish=always",
@@ -40,10 +40,14 @@
     "web-vitals": "^1.1.1"
   },
   "devDependencies": {
+    "@tailwindcss/postcss7-compat": "^2.0.3",
     "@types/react-redux": "^7.1.16",
+    "autoprefixer": "^9.8.6",
     "concurrently": "^6.0.0",
     "electron": "^12.0.1",
     "electron-builder": "^22.10.5",
+    "postcss": "^7.0.35",
+    "tailwindcss": "npm:@tailwindcss/postcss7-compat@^2.0.3",
     "wait-on": "^5.2.1"
   },
   "eslintConfig": {
