@@ -1,35 +1,33 @@
 //@ts-nocheck
 import Exchange from './exchange';
+import {ReconnectingWebSocket} from './ReconnectingWebsocket';
 
 export class Bitmex extends Exchange {
   private baseUrl = `${this.testnet ? 'testnet' : 'www'}.bitmex.com`;
+  public api?: ReconnectingWebSocket;
+  public endpoints: Record<string, string>;
+  protected opened = false;
 
-  constructor(options = {}, private testnet = true) {
+  constructor(private testnet = true) {
     super({id: 'bitmex'});
 
-    this.endoints = {
+    this.endpoints = {
       PRODUCTS: `https://${this.baseUrl}/api/v1/instrument/active`,
-    };
-
-    this.options = {
-      url: `wss://${this.baseUrl}/realtime?subscribe=trade:XBTUSD,instrument:XBTUSD`,
-      ...this.options,
     };
   }
 
   connect() {
-    const validation = super.connect();
-    if (!validation) return Promise.reject();
-    else if (validation instanceof Promise) return validation;
+    const url = `wss://${this.baseUrl}/realtime?subscribe=trade:XBTUSD,instrument:XBTUSD`;
+    this.api = new ReconnectingWebSocket(url);
 
-    return new Promise((resolve, reject) => {
-      this.api = new WebSocket(this.options.url);
+    // this.quotedInUSD = /USD$/.test(this.pair) || /^XBT/.test(this.pair);
 
-      // this.quotedInUSD = /USD$/.test(this.pair) || /^XBT/.test(this.pair);
-
-      this.api.onmessage = (event) => {
+    this.api.onmessage = (event) => {
+      try {
         const data = JSON.parse(event.data);
-        console.log('on message', data);
+
+        if (data.error) return this.emit('error', data.error);
+        if (!data.data) return;
 
         switch (data?.table) {
           case 'trade':
@@ -39,32 +37,35 @@ export class Bitmex extends Exchange {
           case 'order':
             return this.queueOrders(this.formatOrders(data));
         }
-      };
-      this.api.onopen = (e) => {
-        console.log('ON OPEN');
-        this.emitOpen(e);
+      } catch (error) {
+        this.emit('error', 'Unable to parse incoming data');
+      }
+      return;
+    };
 
-        resolve();
-      };
-      this.api.onclose = this.emitClose.bind(this);
-      this.api.onerror = (error) => {
-        console.log('WEBSCOKET ERRRO: ', error);
-        this.emitError({message: `${this.id} disconnected`});
+    this.api.onopen = (e) => {
+      this.opened = true;
+      this.emit('open', e);
+    };
 
-        reject();
-      };
-    });
+    this.api.onclose = (e) => {
+      this.opened = false;
+      this.emitClose(e);
+    };
+
+    this.api.onerror = (error) => {
+      this.emitError(error);
+    };
   }
 
   disconnect() {
-    if (!super.disconnect()) return;
-
     if (this.api && this.api.readyState < 2) {
-      this.api.close();
+      this.api?.close();
     }
+    this.emitClose();
   }
 
-  send = (payload) => {
+  send = (payload: any) => {
     if (this.api) {
       this.api.send(JSON.stringify(payload));
     } else {
@@ -72,16 +73,7 @@ export class Bitmex extends Exchange {
     }
   };
 
-  /*queueTrades(trades) {
-      if (!trades.length) {
-        return
-      }
-  
-      return this.emit('trades', trades)
-    }*/
-
   formatOrders(json) {
-    console.log('FORMAT ORDERS', json);
     if (json?.data?.length && json.table === 'order') {
       return json.data; //.map((order) => order);
     }
@@ -93,7 +85,7 @@ export class Bitmex extends Exchange {
     }
   }
 
-  formatLiveTrades(json) {
+  formatLiveTrades(json: any) {
     if (json && json.data && json.data.length) {
       if (json.table === 'liquidation' && json.action === 'insert') {
         return json.data.map((trade) => ({

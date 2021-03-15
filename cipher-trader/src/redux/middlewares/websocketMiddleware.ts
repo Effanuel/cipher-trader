@@ -1,5 +1,7 @@
 import {MiddlewareAPI} from 'redux';
+import {Binance} from './binance';
 import {Bitmex} from './bitmex';
+import {Bybit} from './bybit';
 
 export function initializeWebsocketMiddleware() {
   const socket = new Socket();
@@ -8,6 +10,7 @@ export function initializeWebsocketMiddleware() {
     connect: socket.connect,
     send: socket.send,
     disconnect: socket.disconnect,
+    setActiveExchange: socket.setActiveExchange,
   };
 
   return (store: MiddlewareAPI) => (next: any) => (action: Action) => {
@@ -32,29 +35,58 @@ export function initializeWebsocketMiddleware() {
 }
 
 class Socket {
+  public activeExchange: 'bitmex' | 'binance' | 'bybit' = 'bitmex';
+
   public bitmex: Bitmex;
+  public binance: Binance;
+  public bybit: Bybit;
+
   constructor() {
     this.bitmex = new Bitmex();
+    this.binance = new Binance();
+    this.bybit = new Bybit();
   }
 
   connect = (store: MiddlewareAPI, payload: any) => {
-    console.log('CONNECTING');
-    this.bitmex.connect();
+    console.log('CONNECTING', this.activeExchange);
+    try {
+      // this.bitmex.connect();
+      this[this.activeExchange].connect();
 
-    this.listenTrades(store);
-    this.listenInstrument(store);
-    this.listenOnOpen(store);
-    this.listenOrders(store);
+      // this.listenTrades(store);
+      // this.listenInstrument(store);
+      // this.listenOnOpen(store);
+      // this.listenOrders(store);
+
+      this[this.activeExchange].on('open', () => {
+        console.log('BINANCE CONNECTED OPEN');
+        store.dispatch({type: 'connected', payload: 'connected'});
+      });
+
+      this[this.activeExchange].on('trades', (event) => {
+        console.log('BINANCEEVENT: ', event);
+        //@ts-ignore
+        store.dispatch({type: 'trades', payload: event?.[0]?.price});
+      });
+    } catch (err) {
+      console.log('AAAAAAAAA SOCKET ERR', err);
+    }
   };
 
   disconnect = (store: MiddlewareAPI, payload: any) => {
     console.log('DISCONNECTING');
-    this.bitmex.disconnect();
+    this[this.activeExchange].disconnect();
   };
 
   send = (store: MiddlewareAPI, payload: any) => {
     console.log('ME SEND');
-    this.bitmex.send(payload);
+    this.bybit.send(payload);
+  };
+
+  setActiveExchange = (store: MiddlewareAPI, payload: any) => {
+    this[this.activeExchange].api?.close();
+    this.activeExchange = payload;
+    this.connect(store, {});
   };
 
   listenOnOpen = ({dispatch}: MiddlewareAPI) => {

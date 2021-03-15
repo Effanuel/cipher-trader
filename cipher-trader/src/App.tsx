@@ -1,6 +1,6 @@
 import React from 'react';
 import {shallowEqual, useDispatch, useSelector} from 'react-redux';
-import {authenticate, connect, disconnect, wsSubscribeTo} from './redux/modules/websocket/websocketModule';
+import {connect, disconnect, setActiveExchange, wsSubscribeTo} from './redux/modules/websocket/websocketModule';
 import './App.css';
 import {AppState} from './redux/store/state';
 
@@ -29,11 +29,15 @@ function App() {
     dispatch(disconnect());
   };
 
+  const setActive = (exchange: any) => {
+    dispatch(setActiveExchange(exchange));
+  };
+
   React.useEffect(() => {
     if (isConnected) {
       console.log('AYTTTTTTTTTTTTTTTTTTTTTTTTT');
-      dispatch(authenticate());
-      dispatch(wsSubscribeTo('order'));
+      // dispatch(authenticate());
+      // dispatch(wsSubscribeTo('instrument_info.100ms.BTCUSDT'));
     }
   }, [dispatch, isConnected]);
 
@@ -43,6 +47,9 @@ function App() {
       <div style={{display: 'flex', background: 'white', fontSize: 30, color: '#121212'}}>{tradePrice}</div>
       <div style={{display: 'flex', background: 'white', fontSize: 25, color: '#1e1e1e'}}>{bidPrice}</div>
       <button onClick={close}>disconnect</button>
+      <button onClick={() => setActive('binance')}>CONNECT TO BINANACE</button>
+      <button onClick={() => setActive('bitmex')}>CONNECT TO BITMEX</button>
+      {/* <button onClick={setActive}>CONNECT TO BYBIT</button> */}
       <ul>
         {orders.length &&
           orders.map((order) => {

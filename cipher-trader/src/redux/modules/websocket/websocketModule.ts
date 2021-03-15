@@ -15,6 +15,10 @@ export const disconnect = (): Thunk => async (dispatch) => {
   } catch (err) {}
 };
 
+export const setActiveExchange = (exchange: 'bitmex' | 'binance' | 'bybit'): Thunk => async (dispatch) => {
+  dispatch({type: 'setActiveExchange', payload: exchange});
+};
+
 export const authenticate = (): Thunk => async (dispatch) => {
   try {
     dispatch({type: 'send', payload: authKeyExpires('/realtime', 'GET')});
@@ -24,7 +28,7 @@ export const authenticate = (): Thunk => async (dispatch) => {
   }
 };
 
-export const wsSubscribeTo = (payload: 'order'): Thunk => async (dispatch) => {
+export const wsSubscribeTo = (payload: string): Thunk => async (dispatch) => {
   try {
     dispatch({type: 'send', payload: {op: 'subscribe', args: [payload]}});
   } catch (err) {
