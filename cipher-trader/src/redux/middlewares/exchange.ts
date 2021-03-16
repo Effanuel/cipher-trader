@@ -1,6 +1,12 @@
 import {EventEmitter} from 'eventemitter3';
 import {ReconnectingWebSocket} from './ReconnectingWebsocket';
 
+export interface BaseExchange {
+  connect: () => void;
+  send: <T>(payoad: T) => void;
+  disconnect: () => void;
+}
+
 export interface ExchangeOptions {
   id: string;
   url: string;

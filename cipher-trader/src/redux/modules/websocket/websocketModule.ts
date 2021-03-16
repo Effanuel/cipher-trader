@@ -1,23 +1,8 @@
 import {Reducer} from 'redux';
+import {$CLOSE, $CONNECT, $DISCONNECT, $ERROR, $INSTRUMENT_DATA, $OPEN, $ORDERS_DATA} from '../../middlewares/actions';
 import {authKeyExpires} from '../../middlewares/auth';
 import {Thunk} from '../../store/state';
 import {WebsocketState} from './types';
-
-export const connect = (): Thunk => async (dispatch) => {
-  try {
-    dispatch({type: 'connect', payload: {message: 'message socket'}});
-  } catch (err) {}
-};
-
-export const disconnect = (): Thunk => async (dispatch) => {
-  try {
-    dispatch({type: 'disconnect', payload: {message: 'message socket'}});
-  } catch (err) {}
-};
-
-export const setActiveExchange = (exchange: 'bitmex' | 'binance' | 'bybit'): Thunk => async (dispatch) => {
-  dispatch({type: 'setActiveExchange', payload: exchange});
-};
 
 export const authenticate = (): Thunk => async (dispatch) => {
   try {
@@ -44,19 +29,28 @@ const initialState: WebsocketState = {
   bidPrice: null,
   orders: [],
   error: '',
+  status: '',
 };
 
 export const websocketReducer: Reducer<WebsocketState, any> = (state = initialState, action: Action) => {
   switch (action.type) {
-    case 'connected':
-      return {...state, isConnected: true};
+    case $CONNECT:
+      return {...state, status: 'Connecting...'};
+    case $OPEN:
+      return {...state, status: 'Connected'};
+    case $DISCONNECT:
+      return {...state, status: 'Disconnecting...'};
+    case $CLOSE:
+      return {...state, status: 'Disconnected.'};
     case 'trades':
       return {...state, tradePrice: action.payload};
-    case 'orders':
+    case $ORDERS_DATA:
       return {...state, orders: action.payload};
-    case 'instrument':
+    case $INSTRUMENT_DATA:
       const {askPrice, bidPrice} = action.payload[0];
       return {...state, askPrice, bidPrice};
+    case $ERROR:
+      return state;
     default:
       return state;
   }

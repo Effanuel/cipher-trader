@@ -1,7 +1,13 @@
-import {MiddlewareAPI} from 'redux';
+import {AnyAction, Dispatch, MiddlewareAPI} from 'redux';
+import {AppState} from '../store/state';
+import {Action, Exchange, getInstrument, noticeError, noticeOpen} from './actions';
 import {Binance} from './binance';
 import {Bitmex} from './bitmex';
 import {Bybit} from './bybit';
+
+type Middleware<State, _Action> = (
+  store: MiddlewareAPI<Dispatch<AnyAction>, State>,
+) => (next: Dispatch<AnyAction>) => (action: _Action) => _Action;
 
 export function initializeWebsocketMiddleware() {
   const socket = new Socket();
@@ -13,29 +19,29 @@ export function initializeWebsocketMiddleware() {
     setActiveExchange: socket.setActiveExchange,
   };
 
-  return (store: MiddlewareAPI) => (next: any) => (action: Action) => {
-    console.log(action, 'ACTIPN');
-    if (Object.keys(handlers).includes(action.type)) {
-      const handler = Reflect.get(handlers, action.type);
+  const availableMethods = Object.keys(handlers);
 
-      console.log('HANDler:: ', handler);
-
+  const middleware: Middleware<AppState, Action> = (store) => (next) => (action) => {
+    const websocketActionType = action.type.match(/\$websocket\/(\w+)/)?.[1];
+    if (websocketActionType && availableMethods.includes(websocketActionType)) {
+      const handler = Reflect.get(handlers, websocketActionType);
       if (handler) {
         try {
           handler(store, action.payload);
         } catch (err) {
-          console.log(err, 'errr');
-          store.dispatch({type: 'err', payload: {error: JSON.stringify(err)}});
+          noticeError(JSON.stringify(err));
         }
       }
     }
 
     return next(action);
   };
+
+  return middleware;
 }
 
 class Socket {
-  public activeExchange: 'bitmex' | 'binance' | 'bybit' = 'bitmex';
+  public activeExchange: Exchange = 'bitmex';
 
   public bitmex: Bitmex;
   public binance: Binance;
@@ -47,7 +53,7 @@ class Socket {
     this.bybit = new Bybit();
   }
 
-  connect = (store: MiddlewareAPI, payload: any) => {
+  connect = ({dispatch}: MiddlewareAPI, payload: any) => {
     console.log('CONNECTING', this.activeExchange);
     try {
       // this.bitmex.connect();
@@ -59,14 +65,15 @@ class Socket {
       // this.listenOrders(store);
 
       this[this.activeExchange].on('open', () => {
-        console.log('BINANCE CONNECTED OPEN');
-        store.dispatch({type: 'connected', payload: 'connected'});
+        dispatch(noticeOpen());
       });
 
       this[this.activeExchange].on('trades', (event) => {
         console.log('BINANCEEVENT: ', event);
-        //@ts-ignore
-        store.dispatch({type: 'trades', payload: event?.[0]?.price});
+        dispatch({type: 'trades', payload: event?.[0]?.price});
+      });
+      this[this.activeExchange].on('instrument', (event) => {
+        dispatch(getInstrument(event?.[0]?.price));
       });
     } catch (err) {
       console.log('AAAAAAAAA SOCKET ERR', err);
@@ -80,7 +87,7 @@ class Socket {
 
   send = (store: MiddlewareAPI, payload: any) => {
     console.log('ME SEND');
-    this.bybit.send(payload);
+    this[this.activeExchange].send(payload);
   };
 
   setActiveExchange = (store: MiddlewareAPI, payload: any) => {

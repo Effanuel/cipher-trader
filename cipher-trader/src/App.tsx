@@ -1,8 +1,8 @@
 import React from 'react';
 import {shallowEqual, useDispatch, useSelector} from 'react-redux';
-import {connect, disconnect, setActiveExchange, wsSubscribeTo} from './redux/modules/websocket/websocketModule';
-import './App.css';
+import {connect, disconnect, setActiveExchange} from './redux/middlewares/actions';
 import {AppState} from './redux/store/state';
+import './App.css';
 
 function App() {
   const dispatch = useDispatch();
@@ -19,7 +19,7 @@ function App() {
   );
 
   React.useEffect(() => {
-    dispatch(connect());
+    dispatch(connect('binance'));
     return () => {
       dispatch(disconnect());
     };

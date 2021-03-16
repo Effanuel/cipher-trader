@@ -1,4 +1,4 @@
-import Exchange from './exchange';
+import Exchange, {BaseExchange} from './exchange';
 import {ReconnectingWebSocket} from './ReconnectingWebsocket';
 
 function throttle(func: (...args: unknown[]) => void, timeFrame: number) {
@@ -13,7 +13,7 @@ function throttle(func: (...args: unknown[]) => void, timeFrame: number) {
   };
 }
 
-export class Bybit extends Exchange {
+export class Bybit extends Exchange implements BaseExchange {
   public api?: ReconnectingWebSocket;
   public endpoints: Record<string, string>;
   protected opened = false;

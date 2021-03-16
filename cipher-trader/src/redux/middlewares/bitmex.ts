@@ -1,8 +1,8 @@
 //@ts-nocheck
-import Exchange from './exchange';
+import Exchange, {BaseExchange} from './exchange';
 import {ReconnectingWebSocket} from './ReconnectingWebsocket';
 
-export class Bitmex extends Exchange {
+export class Bitmex extends Exchange implements BaseExchange {
   private baseUrl = `${this.testnet ? 'testnet' : 'www'}.bitmex.com`;
   public api?: ReconnectingWebSocket;
   public endpoints: Record<string, string>;

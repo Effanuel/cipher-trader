@@ -5,4 +5,5 @@ export interface WebsocketState {
   bidPrice: number | null;
   orders: any[];
   error: string;
+  status: string;
 }

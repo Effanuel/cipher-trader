@@ -1,7 +1,7 @@
-import Exchange from './exchange';
+import Exchange, {BaseExchange} from './exchange';
 import {ReconnectingWebSocket} from './ReconnectingWebsocket';
 
-export class Binance extends Exchange {
+export class Binance extends Exchange implements BaseExchange {
   public api?: ReconnectingWebSocket;
   public endpoints: Record<string, string>;
   protected opened = false;
@@ -37,6 +37,8 @@ export class Binance extends Exchange {
       this.emitError({message: `${this.id} disconnected`});
     };
   }
+
+  send() {}
 
   disconnect() {
     if (this.api && this.api.readyState < 2) {
