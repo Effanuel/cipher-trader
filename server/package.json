@@ -1,0 +1,56 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "description": "server side of the application(express)",
+  "author": "Juozas Rimantas <etajuozas@gmail.com>",
+  "license": "MIT",
+  "main": "src/app",
+  "scripts": {
+    "tsc": "tsc",
+    "start": "cross-env NODE_ENV=production tsc && node ./dist/app.js",
+    "server": "nodemon src/app.ts",
+    "clean": "rimraf ./dist",
+    "eslint:ts": "eslint . -c .eslintrc --ignore-path .eslintignore --ext .ts --max-warnings 20 -f stylish",
+    "dev": "NODE_ENV=development && concurrently \"npm run server\" \"npm run client\"",
+    "prod": "cross-env NODE_ENV=production npm run start",
+    "init:packages": "npm install && cd ../client && npm install && cd ../api",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "cors": "2.8.5",
+    "crypto": "^1.0.1",
+    "dotenv": "8.0.0",
+    "express": "4.17.1",
+    "helmet": "3.21.1",
+    "morgan": "^1.10.0",
+    "request": "2.88.0",
+    "request-promise": "^4.2.5",
+    "winston": "^3.2.1"
+  },
+  "devDependencies": {
+    "@types/cors": "2.8.6",
+    "@types/dotenv": "6.1.1",
+    "@types/express": "4.17.1",
+    "@types/helmet": "0.0.44",
+    "@types/morgan": "^1.9.0",
+    "@types/node": "12.11.1",
+    "@types/request": "^2.48.4",
+    "@types/request-promise": "^4.1.46",
+    "@typescript-eslint/eslint-plugin": "^4.17.0",
+    "@typescript-eslint/parser": "^4.17.0",
+    "concurrently": "^5.2.0",
+    "cross-env": "^7.0.2",
+    "eslint": "^7.21.0",
+    "eslint-config-prettier": "^8.1.0",
+    "eslint-plugin-jest": "^23.13.1",
+    "nodemon": "1.19.1",
+    "prettier": "^2.0.5",
+    "rimraf": "^3.0.2",
+    "ts-node": "^9.1.1",
+    "typescript": "3.9.6"
+  },
+  "repository": {
+    "type": "git",
+    "url": "Effanuel/BitMEX-scaled-orders"
+  }
+}

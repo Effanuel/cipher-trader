@@ -20,6 +20,8 @@ type PickWithOptional<T, K extends keyof T, O extends keyof T> = {
 } &
   {[P in O]?: T[P]};
 
+type ThenArg<T> = T extends PromiseLike<infer U> ? U : T;
+
 // eslint-disable-next-line @typescript-eslint/ban-types
 type KeysByType<O extends object, T> = {
   [k in keyof O]-?: O[k] extends T ? k : never;
